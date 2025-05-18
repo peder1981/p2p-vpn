@@ -351,6 +351,51 @@ func (v *VPNCore) GetNodeInfo() (string, string, string) {
 	return v.config.NodeID, v.config.PublicKey, v.config.VirtualIP
 }
 
+// GetPeerByID retorna um peer específico com base no seu ID
+// GetPeerByID returns a specific peer based on its ID
+// GetPeerByID devuelve un peer específico basado en su ID
+func (v *VPNCore) GetPeerByID(peerID string) *TrustedPeer {
+	v.mutex.Lock()
+	defer v.mutex.Unlock()
+	
+	for i := range v.config.TrustedPeers {
+		if v.config.TrustedPeers[i].NodeID == peerID {
+			// Retornar uma cópia do peer para evitar problemas de concorrência
+			peerCopy := v.config.TrustedPeers[i]
+			return &peerCopy
+		}
+	}
+	
+	return nil
+}
+
+// ProcessIncomingData processa dados recebidos de um peer específico
+// ProcessIncomingData processes incoming data from a specific peer
+// ProcessIncomingData procesa datos entrantes de un peer específico
+func (v *VPNCore) ProcessIncomingData(peerID string, data []byte) error {
+	v.mutex.Lock()
+	defer v.mutex.Unlock()
+	
+	// Verificar se o peer existe
+	var foundPeer bool
+	for i := range v.config.TrustedPeers {
+		if v.config.TrustedPeers[i].NodeID == peerID {
+			foundPeer = true
+			break
+		}
+	}
+	
+	if !foundPeer {
+		return fmt.Errorf("peer %s não encontrado", peerID)
+	}
+	
+	// Aqui seria implementado o processamento real dos dados
+	// Este é apenas um stub para o método
+	fmt.Printf("Processando %d bytes de dados do peer %s\n", len(data), peerID)
+	
+	return nil
+}
+
 // Rotina de monitoramento
 func (v *VPNCore) monitorRoutine() {
 	ticker := time.NewTicker(30 * time.Second)

@@ -285,17 +285,24 @@ func (p *LinuxPlatform) GetInterfaceStatus(interfaceName string) (bool, error) {
 	return link.Attrs().Flags&net.FlagUp != 0, nil
 }
 
+// Variável global para a plataforma Linux
+// Global variable for the Linux platform
+// Variable global para la plataforma Linux
+var linuxPlatform = &LinuxPlatform{}
+
 // init registra a plataforma Linux
+// init registers the Linux platform
+// init registra la plataforma Linux
 func init() {
-	// Substituir a função GetPlatform se estamos em Linux
+	// Registrar a plataforma Linux no início da lista de plataformas para sistemas Linux
+	// Register the Linux platform at the beginning of the platform list for Linux systems
+	// Registrar la plataforma Linux al inicio de la lista de plataformas para sistemas Linux
 	if os.Getenv("GOOS") == "linux" || os.Getenv("GOOS") == "" {
-		originalGetPlatform := GetPlatform
-		GetPlatform = func() (VPNPlatform, error) {
-			platform := &LinuxPlatform{}
-			if platform.IsSupported() {
-				return platform, nil
+		RegisterPlatform(func() (VPNPlatform, error) {
+			if linuxPlatform.IsSupported() {
+				return linuxPlatform, nil
 			}
-			return originalGetPlatform()
-		}
+			return nil, fmt.Errorf("plataforma Linux não suportada")
+		})
 	}
 }

@@ -104,5 +104,12 @@ func (h *SecurePacketHandler) AddPeerPublicKey(peerID string, publicKeyPEM []byt
 	}
 
 	// Armazenar para uso futuro
-	return h.keyManager.StorePeerKey(peerID, h.keyManager.GetPeerKey(peerID))
+	// Obter a chave pública do peer
+	peerKey, err := h.keyManager.GetPeerKey(peerID)
+	if err != nil {
+		return fmt.Errorf("erro ao obter chave do peer para armazenamento: %w", err)
+	}
+	
+	// Armazenar a chave do peer
+	return h.keyManager.StorePeerKey(peerID, peerKey)
 }
