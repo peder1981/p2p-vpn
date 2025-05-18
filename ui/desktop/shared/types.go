@@ -27,24 +27,20 @@ const (
 // AssetConfig configuración de recursos gráficos
 type AssetConfig struct {
 	// Caminho para os ícones
-	ConnectedIconPath    string
-	DisconnectedIconPath string
-	AppIconPath          string
+	ConnectedIconPath        string // Ícone da bandeja para estado conectado
+	DisconnectedIconPath     string // Ícone da bandeja para estado desconectado
+	AppIconPath              string // Ícone principal da aplicação
+	StatusConnectedIconPath    string // Ícone de status para estado conectado
+	StatusDisconnectedIconPath string // Ícone de status para estado desconectado
 }
 
 // UIConfig configuração da interface do usuário
 // UIConfig user interface configuration
 // UIConfig configuración de la interfaz de usuario
 type UIConfig struct {
-	// Idioma da interface (pt-br, en, es)
-	Language string
-	
-	// Tema (light, dark, system)
-	Theme string
-	
-	// Iniciar minimizado na bandeja
-	StartMinimized bool
-	
-	// Recursos gráficos
-	Assets AssetConfig
+	Language       string      // Idioma da interface / Interface language / Idioma de la interfaz
+	Theme          string      // Tema da interface / Interface theme / Tema de la interfaz
+	StartMinimized bool        // Iniciar minimizado / Start minimized / Iniciar minimizado
+	AutoStart      bool        // Iniciar automaticamente com o sistema / Start automatically with system / Iniciar automáticamente con el sistema
+	Assets         AssetConfig // Configuração de ativos gráficos / Graphic assets configuration / Configuración de activos gráficos
 }

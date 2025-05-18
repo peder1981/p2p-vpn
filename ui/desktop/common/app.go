@@ -32,51 +32,15 @@ type DesktopApp struct {
 	config         *shared.UIConfig
 	vpnRunning     bool
 	peers          []core.TrustedPeer
-}
-
-// Tradução simples para múltiplos idiomas
-// Simple translation for multiple languages
-// Traducción simple para múltiples idiomas
-var translations = map[string]map[string]string{
-	"pt-br": {
-		"title":       "P2P VPN",
-		"status":      "Status: %s",
-		"connect":     "Conectar",
-		"disconnect":  "Desconectar",
-		"peers":       "Peers",
-		"settings":    "Configurações",
-		"exit":        "Sair",
-		"connected":   "Conectado",
-		"disconnected": "Desconectado",
-	},
-	"en": {
-		"title":       "P2P VPN",
-		"status":      "Status: %s",
-		"connect":     "Connect",
-		"disconnect":  "Disconnect",
-		"peers":       "Peers",
-		"settings":    "Settings",
-		"exit":        "Exit",
-		"connected":   "Connected",
-		"disconnected": "Disconnected",
-	},
-	"es": {
-		"title":       "P2P VPN",
-		"status":      "Estado: %s",
-		"connect":     "Conectar",
-		"disconnect":  "Desconectar",
-		"peers":       "Peers",
-		"settings":    "Ajustes",
-		"exit":        "Salir",
-		"connected":   "Conectado",
-		"disconnected": "Desconectado",
-	},
+	translations   shared.Translations
 }
 
 // NewDesktopApp cria uma nova instância da aplicação desktop
 // NewDesktopApp creates a new instance of the desktop application
 // NewDesktopApp crea una nueva instancia de la aplicación de escritorio
 func NewDesktopApp(vpnCore core.VPNProvider, platformUI platform.PlatformUI, config *shared.UIConfig) (*DesktopApp, error) {
+	// Carregar traduções para o idioma configurado
+	translations := shared.GetTranslations(config.Language)
 	// Criar nova aplicação Fyne
 	fyneApp := app.New()
 	
@@ -88,20 +52,21 @@ func NewDesktopApp(vpnCore core.VPNProvider, platformUI platform.PlatformUI, con
 	} // default: tema do sistema
 
 	// Criar janela principal
-	mainWindow := fyneApp.NewWindow(getText(config.Language, "title"))
+	mainWindow := fyneApp.NewWindow("P2P VPN")
 	
 	// Criar binding para lista de peers
 	peerData := binding.NewStringList()
 	
 	// Inicializar a estrutura DesktopApp
 	desktopApp := &DesktopApp{
-		fyneApp:    fyneApp,
-		mainWindow: mainWindow,
-		platformUI: platformUI,
-		vpnCore:    vpnCore,
-		config:     config,
-		peerData:   peerData,
-		vpnRunning: false,
+		fyneApp:        fyneApp,
+		mainWindow:     mainWindow,
+		platformUI:     platformUI,
+		vpnCore:        vpnCore,
+		config:         config,
+		peerData:       peerData,
+		vpnRunning:     false,
+		translations:   translations,
 	}
 	
 	// Configurar a interface
@@ -119,11 +84,11 @@ func NewDesktopApp(vpnCore core.VPNProvider, platformUI platform.PlatformUI, con
 // setupUI configura los elementos de la interfaz
 func (d *DesktopApp) setupUI() {
 	// Status da VPN
-	d.statusLabel = widget.NewLabel(fmt.Sprintf(getText(d.config.Language, "status"), 
-		getText(d.config.Language, "disconnected")))
+	d.statusLabel = widget.NewLabel(fmt.Sprintf("%s: %s", d.GetTranslated("common", shared.KeyStatus),
+		d.GetTranslated("status", shared.KeyStatusDisconnected)))
 	
 	// Botão de conectar/desconectar
-	d.connectButton = widget.NewButton(getText(d.config.Language, "connect"), func() {
+	d.connectButton = widget.NewButton(d.GetTranslated("common", shared.KeyConnect), func() {
 		d.toggleVPNConnection()
 	})
 	
@@ -142,17 +107,17 @@ func (d *DesktopApp) setupUI() {
 	content := container.NewVBox(
 		d.statusLabel,
 		d.connectButton,
-		widget.NewLabel(getText(d.config.Language, "peers")),
+		widget.NewLabel("Peers"),
 		container.New(layout.NewGridWrapLayout(fyne.NewSize(300, 200)), d.peerList),
 	)
 	
 	// Configurar menu
 	d.mainWindow.SetMainMenu(fyne.NewMainMenu(
 		fyne.NewMenu("File",
-			fyne.NewMenuItem(getText(d.config.Language, "settings"), func() {
+			fyne.NewMenuItem(d.GetTranslated("common", shared.KeySettings), func() {
 				d.showSettings()
 			}),
-			fyne.NewMenuItem(getText(d.config.Language, "exit"), func() {
+			fyne.NewMenuItem(d.GetTranslated("common", shared.KeyExit), func() {
 				d.Close()
 			}),
 		),
@@ -270,7 +235,6 @@ func (d *DesktopApp) ShowMainWindow(show bool) {
 // ShowNotification displays a notification
 // ShowNotification muestra una notificación
 func (d *DesktopApp) ShowNotification(title, content string, priority shared.NotificationPriority) {
-	// Delegamos para a implementação específica da plataforma
 	d.platformUI.ShowNotification(title, content, priority)
 }
 
@@ -282,36 +246,30 @@ func (d *DesktopApp) UpdateStatus(status core.VPNStatus) {
 	
 	// Atualizar texto do botão e status
 	if status.Running {
-		d.statusLabel.SetText(fmt.Sprintf(getText(d.config.Language, "status"),
-			getText(d.config.Language, "connected")))
-		d.connectButton.SetText(getText(d.config.Language, "disconnect"))
+		d.statusLabel.SetText(fmt.Sprintf("%s: %s", d.GetTranslated("common", shared.KeyStatus),
+			d.GetTranslated("status", shared.KeyStatusConnected)))
+		d.connectButton.SetText(d.GetTranslated("common", shared.KeyDisconnect))
 	} else {
-		d.statusLabel.SetText(fmt.Sprintf(getText(d.config.Language, "status"),
-			getText(d.config.Language, "disconnected")))
-		d.connectButton.SetText(getText(d.config.Language, "connect"))
+		d.statusLabel.SetText(fmt.Sprintf("%s: %s", d.GetTranslated("common", shared.KeyStatus),
+			d.GetTranslated("status", shared.KeyStatusDisconnected)))
+		d.connectButton.SetText(d.GetTranslated("common", shared.KeyConnect))
 	}
 	
 	// Atualizar ícone na bandeja
 	d.platformUI.UpdateTrayIcon(status.Running)
 }
 
-// getText obtém um texto traduzido com base no idioma configurado
-// getText gets a translated text based on the configured language
-// getText obtiene un texto traducido basado en el idioma configurado
-func getText(language, key string) string {
-	if trans, ok := translations[language]; ok {
-		if text, ok := trans[key]; ok {
-			return text
-		}
-	}
-	
-	// Fallback para inglês
-	if englishTrans, ok := translations["en"]; ok {
-		if text, ok := englishTrans[key]; ok {
-			return text
-		}
-	}
-	
-	// Se não encontrar, retornar a chave
-	return key
+// GetTranslated retorna uma string traduzida com base na chave e categoria
+// GetTranslated returns a translated string based on key and category
+// GetTranslated devuelve una cadena traducida basada en la clave y categoría
+func (d *DesktopApp) GetTranslated(category string, key string) string {
+	return shared.GetTranslated(d.translations, category, key)
+}
+
+// FormatTranslated retorna uma string traduzida formatada com argumentos
+// FormatTranslated returns a translated string formatted with arguments
+// FormatTranslated devuelve una cadena traducida formateada con argumentos
+func (d *DesktopApp) FormatTranslated(category string, key string, a ...interface{}) string {
+	base := shared.GetTranslated(d.translations, category, key)
+	return fmt.Sprintf(base, a...)
 }

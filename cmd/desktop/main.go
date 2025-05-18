@@ -9,7 +9,8 @@ import (
 
 	"github.com/p2p-vpn/p2p-vpn/core"
 	"github.com/p2p-vpn/p2p-vpn/ui/desktop"
-	"github.com/p2p-vpn/p2p-vpn/ui/desktop/common"
+	"github.com/p2p-vpn/p2p-vpn/ui/desktop/assets"
+	"github.com/p2p-vpn/p2p-vpn/ui/desktop/shared"
 )
 
 // Flags de linha de comando
@@ -58,20 +59,14 @@ func main() {
 		defer logFile.Close()
 	}
 
-	// Configurar caminhos para recursos de UI
-	assetsDir := filepath.Join(appDir, "ui", "desktop", "assets")
-	uiConfig := &common.UIConfig{
-		Language:       *language,
-		Theme:          *theme,
-		StartMinimized: *minimized,
-		AutoStart:      false, // Será definido mais tarde se necessário
-		Assets: common.UIAssets{
-			IconPath:            filepath.Join(assetsDir, "icons", "app_icon.png"),
-			TrayIconPath:        filepath.Join(assetsDir, "icons", "tray_disconnected.png"),
-			ConnectedIconPath:   filepath.Join(assetsDir, "icons", "tray_connected.png"),
-			DisconnectedIconPath: filepath.Join(assetsDir, "icons", "tray_disconnected.png"),
-		},
-	}
+	// Obter configuração padrão para a UI com os caminhos corretos para os ícones
+	var uiConfig *shared.UIConfig = assets.GetDefaultConfig()
+	
+	// Sobrescrever configurações com os valores dos argumentos da linha de comando
+	uiConfig.Language = *language
+	uiConfig.Theme = *theme
+	uiConfig.StartMinimized = *minimized
+	uiConfig.AutoStart = false // Será definido mais tarde se necessário
 
 	// Criar uma instância do core VPN
 	vpnCore, err := core.NewVPNCoreMulti(config, config.ListenPort)

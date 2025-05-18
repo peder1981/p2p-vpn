@@ -34,7 +34,7 @@ func NewUIManager(vpnCore core.VPNProvider, config *shared.UIConfig) (*UIManager
 	}
 	manager.platformUI = platformUI
 
-	// Inicializar UI comum
+	// Inicializar UI comum - agora translações são carregadas internamente com base no config.Language
 	appUI, err := common.NewDesktopApp(vpnCore, platformUI, config)
 	if err != nil {
 		return nil, err
