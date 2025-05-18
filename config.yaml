@@ -1,0 +1,6 @@
+nodeId: node-cd3bfa
+privateKey: GIt+yUoY1WQl/I87G0Ao2Rmx/IoiM1NjQyPfosqUU1c=
+publicKey: WSlSg9KQ9t+K0vCPiE2dSrhTE7YrHCzs1icoFHe3tyU=
+virtualIp: 10.205.59.250
+virtualCidr: 10.205.59.0/24
+trustedPeers: []
