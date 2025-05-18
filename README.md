@@ -57,3 +57,4 @@ Este projeto implementa uma VPN (Rede Privada Virtual) que:
 
 Em desenvolvimento.
 
+# P2P VPN\n\nVPN ponto a ponto multiplataforma com suporte a desktop para Windows, macOS e Linux\n\n## Suporte a Idiomas\n\n- Português do Brasil\n- Inglês\n- Espanhol\n\n## Características\n\n- Implementação multiplataforma (Windows, macOS, Linux)\n- Suporte a fallback para userspace quando o kernel não suporta WireGuard\n- Interface web e desktop nativas para cada plataforma\n- Testes automatizados para compatibilidade entre sistemas
