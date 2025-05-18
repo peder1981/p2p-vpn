@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPN P2P Universal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>VPN P2P Universal</h1>
+            <div class="user-controls">
+                <span class="user-info">
+                    <span class="user-label">Usuário:</span>
+                    <span id="username-display"></span>
+                </span>
+                <button id="logout-button" class="logout-button">Sair</button>
+                <div class="language-switcher">
+                    <select id="language-selector">
+                        <option value="pt-br">Português</option>
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                    </select>
+                </div>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#" data-section="status" class="active"><i class="fas fa-tachometer-alt"></i> Status</a></li>
+                    <li><a href="#" data-section="peers"><i class="fas fa-users"></i> Peers</a></li>
+                    <li><a href="#" data-section="settings"><i class="fas fa-cog"></i> Configurações</a></li>
+                    <li><a href="#" data-section="help"><i class="fas fa-question-circle"></i> Ajuda</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Seção de Status -->
+            <section id="status" class="section active">
+                <h2 class="section-title">Status da VPN</h2>
+                <div class="status-container">
+                    <div id="connection-status" class="status-card">
+                        <div class="status-icon">
+                            <i class="fas fa-plug"></i>
+                        </div>
+                        <div class="status-info">
+                            <h3>Conexão</h3>
+                            <p id="connection-state">Carregando...</p>
+                        </div>
+                    </div>
+
+                    <div class="status-card">
+                        <div class="status-icon">
+                            <i class="fas fa-network-wired"></i>
+                        </div>
+                        <div class="status-info">
+                            <h3>Interface</h3>
+                            <p id="interface-name">Carregando...</p>
+                        </div>
+                    </div>
+
+                    <div class="status-card">
+                        <div class="status-icon">
+                            <i class="fas fa-fingerprint"></i>
+                        </div>
+                        <div class="status-info">
+                            <h3>ID do Nó</h3>
+                            <p id="node-id">Carregando...</p>
+                        </div>
+                    </div>
+
+                    <div class="status-card">
+                        <div class="status-icon">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <div class="status-info">
+                            <h3>IP Virtual</h3>
+                            <p id="virtual-ip">Carregando...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button id="start-vpn" class="btn btn-primary"><i class="fas fa-play"></i> Iniciar VPN</button>
+                    <button id="stop-vpn" class="btn btn-danger"><i class="fas fa-stop"></i> Parar VPN</button>
+                    <button id="refresh-status" class="btn btn-secondary"><i class="fas fa-sync"></i> Atualizar</button>
+                </div>
+
+                <div class="info-panel">
+                    <h3>Informações Adicionais</h3>
+                    <table class="info-table">
+                        <tr>
+                            <td>Peers Conectados:</td>
+                            <td id="peers-count">0</td>
+                        </tr>
+                        <tr>
+                            <td>Rede Virtual:</td>
+                            <td id="virtual-network">-</td>
+                        </tr>
+                        <tr>
+                            <td>Chave Pública:</td>
+                            <td id="public-key">-</td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Seção de Peers -->
+            <section id="peers" class="section">
+                <h2 class="section-title">Gerenciamento de Peers</h2>
+
+                <div class="actions">
+                    <button id="add-peer" class="btn btn-primary"><i class="fas fa-user-plus"></i> Adicionar Peer</button>
+                    <button id="refresh-peers" class="btn btn-secondary"><i class="fas fa-sync"></i> Atualizar</button>
+                </div>
+
+                <div class="peers-list-container">
+                    <table class="peers-table">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>ID</th>
+                                <th>IP Virtual</th>
+                                <th>Endpoints</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="peers-list">
+                            <!-- Preenchido dinamicamente via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Modal para adicionar peer -->
+                <div id="add-peer-modal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Adicionar Novo Peer</h3>
+                            <span class="close">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <form id="add-peer-form">
+                                <div class="form-group">
+                                    <label for="peer-id">ID do Peer (opcional):</label>
+                                    <input type="text" id="peer-id" placeholder="Ex: peer-server-1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="peer-public-key">Chave Pública (obrigatório):</label>
+                                    <input type="text" id="peer-public-key" placeholder="Chave pública WireGuard" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="peer-virtual-ip">IP Virtual (obrigatório):</label>
+                                    <input type="text" id="peer-virtual-ip" placeholder="Ex: 10.0.0.2" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="peer-endpoint">Endpoint (opcional):</label>
+                                    <input type="text" id="peer-endpoint" placeholder="Ex: 123.45.67.89:51820">
+                                </div>
+                                <div class="form-group">
+                                    <label for="peer-keepalive">Keepalive (segundos):</label>
+                                    <input type="number" id="peer-keepalive" placeholder="Ex: 25" min="0">
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Adicionar</button>
+                                    <button type="button" class="btn btn-secondary" id="cancel-add-peer">Cancelar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção de Configurações -->
+            <section id="settings" class="section">
+                <h2 class="section-title">Configurações</h2>
+                
+                <div class="settings-container">
+                    <div class="settings-group">
+                        <h3>Configurações de Rede</h3>
+                        <form id="network-settings-form">
+                            <div class="form-group">
+                                <label for="setting-interface">Nome da Interface:</label>
+                                <input type="text" id="setting-interface" placeholder="Ex: wg0">
+                            </div>
+                            <div class="form-group">
+                                <label for="setting-port">Porta WireGuard:</label>
+                                <input type="number" id="setting-port" placeholder="Ex: 51820" min="1024" max="65535">
+                            </div>
+                            <div class="form-group">
+                                <label for="setting-discovery-port">Porta de Descoberta:</label>
+                                <input type="number" id="setting-discovery-port" placeholder="Ex: 51821" min="1024" max="65535">
+                            </div>
+                            <div class="form-group">
+                                <label for="setting-mtu">MTU:</label>
+                                <input type="number" id="setting-mtu" placeholder="Ex: 1420" min="576" max="9000">
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Salvar</button>
+                                <button type="reset" class="btn btn-secondary">Redefinir</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>Descoberta de Peers</h3>
+                        <form id="discovery-settings-form">
+                            <div class="form-group">
+                                <label for="setting-discovery-method">Método de Descoberta:</label>
+                                <select id="setting-discovery-method">
+                                    <option value="manual">Manual</option>
+                                    <option value="multicast">Multicast Local</option>
+                                    <option value="dht">DHT (Distributed Hash Table)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="setting-rendezvous-server">Servidor Rendezvous:</label>
+                                <input type="text" id="setting-rendezvous-server" placeholder="Ex: rendezvous.example.com:8080">
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Salvar</button>
+                                <button type="reset" class="btn btn-secondary">Redefinir</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção de Ajuda -->
+            <section id="help" class="section">
+                <h2 class="section-title">Ajuda</h2>
+                
+                <div class="help-container">
+                    <div class="help-card">
+                        <h3>Sobre a VPN P2P Universal</h3>
+                        <p>A VPN P2P Universal é uma solução de rede privada virtual que permite conexões seguras peer-to-peer sem depender de servidores centralizados.</p>
+                        
+                        <h4>Recursos principais:</h4>
+                        <ul>
+                            <li>Conexões P2P diretas sem servidores centrais</li>
+                            <li>Criptografia forte usando o protocolo WireGuard</li>
+                            <li>Suporte a múltiplas plataformas</li>
+                            <li>Descoberta automática de peers</li>
+                            <li>Interface simples e intuitiva</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-card">
+                        <h3>Perguntas Frequentes</h3>
+                        
+                        <div class="faq-item">
+                            <h4>Como adicionar um novo peer?</h4>
+                            <p>Acesse a seção "Peers", clique em "Adicionar Peer" e preencha as informações necessárias como chave pública e IP virtual.</p>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <h4>Como obter minha chave pública?</h4>
+                            <p>Sua chave pública é exibida na seção "Status" em "Informações Adicionais".</p>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <h4>O que fazer se não conseguir conectar a um peer?</h4>
+                            <p>Verifique se as configurações de endpoint estão corretas e se ambas as partes adicionaram as informações do peer corretamente.</p>
+                        </div>
+                    </div>
+
+                    <div class="help-card">
+                        <h3>Suporte</h3>
+                        <p>Para obter ajuda adicional, consulte a documentação completa ou entre em contato com a equipe de suporte:</p>
+                        <ul>
+                            <li><a href="https://github.com/p2p-vpn/p2p-vpn" target="_blank">Documentação</a></li>
+                            <li><a href="https://github.com/p2p-vpn/p2p-vpn/issues" target="_blank">Relatar Problemas</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 VPN P2P Universal - Software Livre e Código Aberto</p>
+            <p><a href="https://github.com/p2p-vpn/p2p-vpn" target="_blank">GitHub</a></p>
+        </footer>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

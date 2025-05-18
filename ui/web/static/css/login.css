@@ -1,0 +1,168 @@
+/* 
+ * Estilos para a página de login da VPN P2P Universal
+ * Styles for the Universal P2P VPN login page
+ * Estilos para la página de inicio de sesión de la VPN P2P Universal
+ */
+
+.login-page {
+    background-color: #f5f7fa;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+}
+
+.login-box {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    padding: 30px;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-header h1 {
+    color: #2c3e50;
+    margin-bottom: 5px;
+    font-size: 24px;
+}
+
+.login-header p {
+    color: #7f8c8d;
+    margin-top: 0;
+    font-size: 14px;
+}
+
+.login-form {
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #34495e;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"] {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #dce4ec;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+}
+
+.remember-me input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.remember-me label {
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+.error-message {
+    color: #e74c3c;
+    font-size: 14px;
+    margin-bottom: 15px;
+    min-height: 20px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+button:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+.login-footer {
+    text-align: center;
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #ecf0f1;
+}
+
+.language-selector {
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.language-selector label {
+    margin-right: 10px;
+    color: #7f8c8d;
+    font-size: 14px;
+}
+
+.language-selector select {
+    padding: 5px 10px;
+    border: 1px solid #dce4ec;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: white;
+    color: #34495e;
+}
+
+.version-info, .copyright {
+    color: #95a5a6;
+    font-size: 12px;
+    margin: 5px 0;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 480px) {
+    .login-container {
+        padding: 10px;
+    }
+    
+    .login-box {
+        padding: 20px;
+    }
+}

@@ -1,0 +1,71 @@
+# Configuração de Segurança da VPN P2P Universal
+# Security Configuration for Universal P2P VPN
+# Configuración de Seguridad de la VPN P2P Universal
+
+# Configurações da interface web
+web:
+  # Escutar em (padrão: localhost:8080)
+  listen_addr: "0.0.0.0:8080"
+  
+  # Configuração de HTTPS (recomendado para produção)
+  https:
+    # Habilitar HTTPS
+    enabled: true
+    # Caminho para os arquivos de certificado (será gerado se não existir)
+    cert_file: "certs/server.crt"
+    key_file: "certs/server.key"
+    # Se deve gerar um certificado autoassinado quando os arquivos não existirem
+    self_sign: true
+  
+  # Sessão e Token JWT
+  auth:
+    # Tempo de expiração do token JWT em horas (padrão: 24h)
+    jwt_expiration: 24
+    # Segredo para assinatura JWT (será gerado aleatoriamente se vazio)
+    jwt_secret: ""
+    # Arquivo para armazenar usuários (será criado se não existir)
+    users_file: "data/users.json"
+    
+    # Usuário admin padrão (será criado se users_file não existir)
+    default_admin:
+      # Deixe em branco para desabilitar a criação automática do usuário admin
+      username: "admin"
+      # Senha temporária (deve ser alterada após o primeiro login)
+      password: "admin123"
+
+# Configurações de segurança da VPN
+vpn:
+  # Opções de criptografia
+  encryption:
+    # Configuração da curva para criptografia (não alterar)
+    curve: "Curve25519"
+  
+  # Controle de acesso
+  access:
+    # Lista de IPs confiáveis para administração (deixe vazio para permitir qualquer IP)
+    trusted_ips: []
+    # Permitir apenas peers autenticados (recomendado para produção)
+    authenticated_peers_only: true
+    # Verificar chaves de peers (recomendado para produção)
+    verify_peer_keys: true
+
+# Configurações de auditoria e logging
+audit:
+  # Habilitar registro de eventos de segurança
+  enabled: true
+  # Nível de log (debug, info, warn, error)
+  level: "info"
+  # Caminho para o arquivo de log
+  log_file: "logs/security.log"
+  # Rotação de logs (em dias, 0 para desabilitar)
+  log_rotation: 7
+  # Eventos a registrar
+  events:
+    # Eventos de autenticação (login, logout, falhas)
+    auth: true
+    # Eventos de VPN (conexão, desconexão, falhas)
+    vpn: true
+    # Eventos de administração (alterações de configuração)
+    admin: true
+    # Eventos de acesso à API
+    api: false
