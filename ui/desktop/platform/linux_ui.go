@@ -9,19 +9,18 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
-	"runtime"
 
 	"github.com/getlantern/systray"
 
 	"github.com/p2p-vpn/p2p-vpn/core"
-	"github.com/p2p-vpn/p2p-vpn/ui/desktop/common"
+	"github.com/p2p-vpn/p2p-vpn/ui/desktop/shared"
 )
 
 // LinuxUI implementa a interface PlatformUI para Linux
 // LinuxUI implements the PlatformUI interface for Linux
 // LinuxUI implementa la interfaz PlatformUI para Linux
 type LinuxUI struct {
-	config            *common.UIConfig
+	config            *shared.UIConfig
 	vpnCore           core.VPNProvider
 	trayMenu          *systray.MenuItem
 	showWindowMenu    *systray.MenuItem
@@ -34,12 +33,24 @@ type LinuxUI struct {
 	trayInitialized   bool
 	desktopEntryPath  string
 	hasLibnotify      bool
+	callbacks         *LinuxCallbacks
+}
+
+// LinuxCallbacks contém callbacks para eventos da UI
+// LinuxCallbacks contains callbacks for UI events
+// LinuxCallbacks contiene callbacks para eventos de la UI
+type LinuxCallbacks struct {
+	OnShowWindow func()
+	OnConnect    func() error
+	OnDisconnect func() error
+	OnSettings   func()
+	OnExit       func()
 }
 
 // NewLinuxUI cria uma nova instância da UI do Linux
 // NewLinuxUI creates a new instance of the Linux UI
 // NewLinuxUI crea una nueva instancia de la UI de Linux
-func NewLinuxUI(config *common.UIConfig) (*LinuxUI, error) {
+func NewLinuxUI(config *shared.UIConfig) (*LinuxUI, error) {
 	// Carregar ícones para a bandeja
 	connectedIcon, err := os.ReadFile(config.Assets.ConnectedIconPath)
 	if err != nil {
@@ -52,7 +63,11 @@ func NewLinuxUI(config *common.UIConfig) (*LinuxUI, error) {
 	}
 
 	// Verificar se o libnotify está disponível
-	_, hasLibnotify := exec.LookPath("notify-send")
+	var hasLibnotify bool
+	_, err = exec.LookPath("notify-send")
+	if err == nil {
+		hasLibnotify = true
+	}
 
 	// Determinar o caminho para o arquivo .desktop
 	desktopEntryPath := ""
@@ -74,7 +89,7 @@ func NewLinuxUI(config *common.UIConfig) (*LinuxUI, error) {
 // Initialize inicializa os componentes específicos do Linux
 // Initialize initializes the Linux-specific components
 // Initialize inicializa los componentes específicos de Linux
-func (l *LinuxUI) Initialize(vpnCore core.VPNProvider, config *common.UIConfig) error {
+func (l *LinuxUI) Initialize(vpnCore core.VPNProvider, config *shared.UIConfig) error {
 	l.vpnCore = vpnCore
 	
 	// Inicializar a bandeja do sistema em uma goroutine separada
@@ -137,30 +152,48 @@ func (l *LinuxUI) handleMenuClicks() {
 	for {
 		select {
 		case <-l.showWindowMenu.ClickedCh:
-			// Enviar evento para mostrar a janela principal
-			// Este é um placeholder, deve ser integrado com a UI principal
-			log.Println("Evento: Mostrar janela principal")
+			// Mostrar/ocultar janela principal
+			log.Println("Evento: Mostrar/ocultar janela principal")
+			if l.callbacks != nil && l.callbacks.OnShowWindow != nil {
+				l.callbacks.OnShowWindow()
+			}
 			
 		case <-l.connectMenu.ClickedCh:
-			// Iniciar VPN
-			err := l.vpnCore.Start()
-			if err != nil {
-				log.Printf("Erro ao iniciar VPN: %v", err)
-				l.ShowNotification("Erro", fmt.Sprintf("Falha ao conectar: %v", err), common.PriorityHigh)
-			} else {
-				l.UpdateTrayIcon(true)
+			// Conectar VPN
+			log.Println("Evento: Conectar VPN")
+			if !l.vpnCore.IsRunning() {
+				var err error
+				if l.callbacks != nil && l.callbacks.OnConnect != nil {
+					err = l.callbacks.OnConnect()
+				} else {
+					err = l.vpnCore.Start()
+				}
+				if err != nil {
+					log.Printf("Erro ao iniciar VPN: %v", err)
+					l.ShowNotification("Erro", fmt.Sprintf("Falha ao conectar: %v", err), shared.PriorityHigh)
+					continue
+				}
+				
 				l.connectMenu.Hide()
 				l.disconnectMenu.Show()
 			}
 			
 		case <-l.disconnectMenu.ClickedCh:
-			// Parar VPN
-			err := l.vpnCore.Stop()
-			if err != nil {
-				log.Printf("Erro ao parar VPN: %v", err)
-				l.ShowNotification("Erro", fmt.Sprintf("Falha ao desconectar: %v", err), common.PriorityHigh)
-			} else {
-				l.UpdateTrayIcon(false)
+			// Desconectar VPN
+			log.Println("Evento: Desconectar VPN")
+			if l.vpnCore.IsRunning() {
+				var err error
+				if l.callbacks != nil && l.callbacks.OnDisconnect != nil {
+					err = l.callbacks.OnDisconnect()
+				} else {
+					err = l.vpnCore.Stop()
+				}
+				if err != nil {
+					log.Printf("Erro ao parar VPN: %v", err)
+					l.ShowNotification("Erro", fmt.Sprintf("Falha ao desconectar: %v", err), shared.PriorityHigh)
+					continue
+				}
+				
 				l.disconnectMenu.Hide()
 				l.connectMenu.Show()
 			}
@@ -168,6 +201,9 @@ func (l *LinuxUI) handleMenuClicks() {
 		case <-l.settingsMenu.ClickedCh:
 			// Abrir configurações
 			log.Println("Evento: Abrir configurações")
+			if l.callbacks != nil && l.callbacks.OnSettings != nil {
+				l.callbacks.OnSettings()
+			}
 			
 		case <-l.exitMenu.ClickedCh:
 			// Sair da aplicação
@@ -176,6 +212,11 @@ func (l *LinuxUI) handleMenuClicks() {
 				if err != nil {
 					log.Printf("Erro ao parar VPN antes de sair: %v", err)
 				}
+			}
+			
+			// Chamar callback de saída se existir
+			if l.callbacks != nil && l.callbacks.OnExit != nil {
+				l.callbacks.OnExit()
 			}
 			
 			// Sair da aplicação
@@ -205,15 +246,15 @@ func (l *LinuxUI) Cleanup() error {
 // ShowNotification exibe uma notificação no Linux
 // ShowNotification displays a notification on Linux
 // ShowNotification muestra una notificación en Linux
-func (l *LinuxUI) ShowNotification(title, content string, priority common.NotificationPriority) {
+func (l *LinuxUI) ShowNotification(title, content string, priority shared.NotificationPriority) {
 	// Determinar urgência baseado na prioridade
 	urgency := "normal"
 	switch priority {
-	case common.PriorityLow:
+	case shared.PriorityLow:
 		urgency = "low"
-	case common.PriorityNormal:
+	case shared.PriorityNormal:
 		urgency = "normal"
-	case common.PriorityHigh:
+	case shared.PriorityHigh:
 		urgency = "critical"
 	}
 	
@@ -309,4 +350,50 @@ X-GNOME-Autostart-enabled=true
 // Name devuelve el nombre de la plataforma
 func (l *LinuxUI) Name() string {
 	return "Linux"
+}
+
+// getText obtém um texto traduzido com base no idioma configurado
+// getText gets a translated text based on the configured language
+// getText obtiene un texto traducido basado en el idioma configurado
+func getText(language, key string) string {
+	// Mapeamento de traduções para a interface Linux
+	translations := map[string]map[string]string{
+		"pt-br": {
+			"showWindow":  "Mostrar Janela",
+			"connect":     "Conectar",
+			"disconnect":  "Desconectar",
+			"settings":    "Configurações",
+			"exit":        "Sair",
+		},
+		"en": {
+			"showWindow":  "Show Window",
+			"connect":     "Connect",
+			"disconnect":  "Disconnect",
+			"settings":    "Settings",
+			"exit":        "Exit",
+		},
+		"es": {
+			"showWindow":  "Mostrar Ventana",
+			"connect":     "Conectar",
+			"disconnect":  "Desconectar",
+			"settings":    "Ajustes",
+			"exit":        "Salir",
+		},
+	}
+
+	if trans, ok := translations[language]; ok {
+		if text, ok := trans[key]; ok {
+			return text
+		}
+	}
+	
+	// Fallback para inglês
+	if englishTrans, ok := translations["en"]; ok {
+		if text, ok := englishTrans[key]; ok {
+			return text
+		}
+	}
+	
+	// Se não encontrar, retornar a chave
+	return key
 }

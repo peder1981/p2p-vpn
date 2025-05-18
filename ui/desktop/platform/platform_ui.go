@@ -5,7 +5,7 @@ import (
 	"runtime"
 
 	"github.com/p2p-vpn/p2p-vpn/core"
-	"github.com/p2p-vpn/p2p-vpn/ui/desktop/common"
+	"github.com/p2p-vpn/p2p-vpn/ui/desktop/shared"
 )
 
 // PlatformUI define a interface para funcionalidades específicas de cada plataforma
@@ -15,7 +15,7 @@ type PlatformUI interface {
 	// Initialize inicializa os componentes específicos da plataforma
 	// Initialize initializes the platform-specific components
 	// Initialize inicializa los componentes específicos de la plataforma
-	Initialize(vpnCore core.VPNProvider, config *common.UIConfig) error
+	Initialize(vpnCore core.VPNProvider, config *shared.UIConfig) error
 
 	// Cleanup limpa recursos específicos da plataforma
 	// Cleanup cleans up platform-specific resources
@@ -25,7 +25,7 @@ type PlatformUI interface {
 	// ShowNotification exibe uma notificação específica da plataforma
 	// ShowNotification displays a platform-specific notification
 	// ShowNotification muestra una notificación específica de la plataforma
-	ShowNotification(title, content string, priority common.NotificationPriority)
+	ShowNotification(title, content string, priority shared.NotificationPriority)
 
 	// UpdateTrayIcon atualiza o ícone na bandeja do sistema
 	// UpdateTrayIcon updates the system tray icon
@@ -46,7 +46,7 @@ type PlatformUI interface {
 // GetPlatformUI retorna a implementação da UI específica para a plataforma atual
 // GetPlatformUI returns the UI implementation specific to the current platform
 // GetPlatformUI devuelve la implementación de UI específica para la plataforma actual
-func GetPlatformUI(config *common.UIConfig) (PlatformUI, error) {
+func GetPlatformUI(config *shared.UIConfig) (PlatformUI, error) {
 	switch runtime.GOOS {
 	case "windows":
 		return NewWindowsUI(config)

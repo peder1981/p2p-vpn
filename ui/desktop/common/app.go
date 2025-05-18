@@ -14,6 +14,7 @@ import (
 
 	"github.com/p2p-vpn/p2p-vpn/core"
 	"github.com/p2p-vpn/p2p-vpn/ui/desktop/platform"
+	"github.com/p2p-vpn/p2p-vpn/ui/desktop/shared"
 )
 
 // DesktopApp implementa a interface DesktopUI usando a biblioteca Fyne
@@ -28,7 +29,7 @@ type DesktopApp struct {
 	connectButton  *widget.Button
 	platformUI     platform.PlatformUI
 	vpnCore        core.VPNProvider
-	config         *UIConfig
+	config         *shared.UIConfig
 	vpnRunning     bool
 	peers          []core.TrustedPeer
 }
@@ -75,7 +76,7 @@ var translations = map[string]map[string]string{
 // NewDesktopApp cria uma nova instância da aplicação desktop
 // NewDesktopApp creates a new instance of the desktop application
 // NewDesktopApp crea una nueva instancia de la aplicación de escritorio
-func NewDesktopApp(vpnCore core.VPNProvider, platformUI platform.PlatformUI, config *UIConfig) (*DesktopApp, error) {
+func NewDesktopApp(vpnCore core.VPNProvider, platformUI platform.PlatformUI, config *shared.UIConfig) (*DesktopApp, error) {
 	// Criar nova aplicação Fyne
 	fyneApp := app.New()
 	
@@ -176,7 +177,7 @@ func (d *DesktopApp) toggleVPNConnection() {
 		if err != nil {
 			// Mostrar erro
 			log.Printf("Erro ao desconectar VPN: %v", err)
-			d.ShowNotification("Erro", fmt.Sprintf("Falha ao desconectar: %v", err), PriorityHigh)
+			d.ShowNotification("Erro", fmt.Sprintf("Falha ao desconectar: %v", err), shared.PriorityHigh)
 			return
 		}
 		
@@ -187,7 +188,7 @@ func (d *DesktopApp) toggleVPNConnection() {
 		if err != nil {
 			// Mostrar erro
 			log.Printf("Erro ao conectar VPN: %v", err)
-			d.ShowNotification("Erro", fmt.Sprintf("Falha ao conectar: %v", err), PriorityHigh)
+			d.ShowNotification("Erro", fmt.Sprintf("Falha ao conectar: %v", err), shared.PriorityHigh)
 			return
 		}
 		
@@ -268,7 +269,7 @@ func (d *DesktopApp) ShowMainWindow(show bool) {
 // ShowNotification exibe uma notificação
 // ShowNotification displays a notification
 // ShowNotification muestra una notificación
-func (d *DesktopApp) ShowNotification(title, content string, priority NotificationPriority) {
+func (d *DesktopApp) ShowNotification(title, content string, priority shared.NotificationPriority) {
 	// Delegamos para a implementação específica da plataforma
 	d.platformUI.ShowNotification(title, content, priority)
 }

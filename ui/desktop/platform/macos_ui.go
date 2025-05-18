@@ -13,14 +13,14 @@ import (
 	"howett.net/plist"
 
 	"github.com/p2p-vpn/p2p-vpn/core"
-	"github.com/p2p-vpn/p2p-vpn/ui/desktop/common"
+	"github.com/p2p-vpn/p2p-vpn/ui/desktop/shared"
 )
 
 // MacOSUI implementa a interface PlatformUI para macOS
 // MacOSUI implements the PlatformUI interface for macOS
 // MacOSUI implementa la interfaz PlatformUI para macOS
 type MacOSUI struct {
-	config            *common.UIConfig
+	config            *shared.UIConfig
 	vpnCore           core.VPNProvider
 	trayMenu          *systray.MenuItem
 	showWindowMenu    *systray.MenuItem
@@ -31,13 +31,24 @@ type MacOSUI struct {
 	connectedIcon     []byte
 	disconnectedIcon  []byte
 	trayInitialized   bool
-	onShowWindow      func()
+	callbacks         *MacOSCallbacks
+}
+
+// MacOSCallbacks contém callbacks para eventos da UI do macOS
+// MacOSCallbacks contains callbacks for macOS UI events
+// MacOSCallbacks contiene callbacks para eventos de la UI de macOS
+type MacOSCallbacks struct {
+	OnShowWindow func()
+	OnConnect    func() error
+	OnDisconnect func() error
+	OnSettings   func()
+	OnExit       func()
 }
 
 // NewMacOSUI cria uma nova instância da UI do macOS
 // NewMacOSUI creates a new instance of the macOS UI
 // NewMacOSUI crea una nueva instancia de la UI de macOS
-func NewMacOSUI(config *common.UIConfig) (*MacOSUI, error) {
+func NewMacOSUI(config *shared.UIConfig) (*MacOSUI, error) {
 	// Carregar ícones para a bandeja
 	connectedIcon, err := os.ReadFile(config.Assets.ConnectedIconPath)
 	if err != nil {
@@ -60,7 +71,7 @@ func NewMacOSUI(config *common.UIConfig) (*MacOSUI, error) {
 // Initialize inicializa os componentes específicos do macOS
 // Initialize initializes the macOS-specific components
 // Initialize inicializa los componentes específicos de macOS
-func (m *MacOSUI) Initialize(vpnCore core.VPNProvider, config *common.UIConfig) error {
+func (m *MacOSUI) Initialize(vpnCore core.VPNProvider, config *shared.UIConfig) error {
 	m.vpnCore = vpnCore
 	
 	// Inicializar a bandeja do sistema em uma goroutine separada
@@ -123,11 +134,10 @@ func (m *MacOSUI) handleMenuClicks() {
 	for {
 		select {
 		case <-m.showWindowMenu.ClickedCh:
-			// Enviar evento para mostrar a janela principal
-			// Este é um placeholder, deve ser integrado com a UI principal
-			log.Println("Evento: Mostrar janela principal")
-			if m.onShowWindow != nil {
-				m.onShowWindow()
+			// Mostrar/ocultar janela principal
+			log.Println("Evento: Mostrar/ocultar janela principal")
+			if m.callbacks != nil && m.callbacks.OnShowWindow != nil {
+				m.callbacks.OnShowWindow()
 			}
 			
 		case <-m.connectMenu.ClickedCh:
@@ -194,7 +204,7 @@ func (m *MacOSUI) Cleanup() error {
 // ShowNotification exibe uma notificação no macOS
 // ShowNotification displays a notification on macOS
 // ShowNotification muestra una notificación en macOS
-func (m *MacOSUI) ShowNotification(title, content string, priority common.NotificationPriority) {
+func (m *MacOSUI) ShowNotification(title, content string, priority shared.NotificationPriority) {
 	// Usar a ferramenta osascript para mostrar notificações no macOS
 	script := fmt.Sprintf(`display notification "%s" with title "%s"`, content, title)
 	

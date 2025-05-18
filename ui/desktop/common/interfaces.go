@@ -2,6 +2,7 @@ package common
 
 import (
 	"github.com/p2p-vpn/p2p-vpn/core"
+	"github.com/p2p-vpn/p2p-vpn/ui/desktop/shared"
 )
 
 // DesktopUI define a interface para a UI comum entre todas as plataformas
@@ -26,7 +27,7 @@ type DesktopUI interface {
 	// ShowNotification exibe uma notificação
 	// ShowNotification displays a notification
 	// ShowNotification muestra una notificación
-	ShowNotification(title, content string, priority NotificationPriority)
+	ShowNotification(title, content string, priority shared.NotificationPriority)
 
 	// UpdateStatus atualiza o status da VPN na interface
 	// UpdateStatus updates the VPN status in the interface

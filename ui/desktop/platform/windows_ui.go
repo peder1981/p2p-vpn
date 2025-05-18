@@ -14,14 +14,14 @@ import (
 	"golang.org/x/sys/windows/registry"
 
 	"github.com/p2p-vpn/p2p-vpn/core"
-	"github.com/p2p-vpn/p2p-vpn/ui/desktop/common"
+	"github.com/p2p-vpn/p2p-vpn/ui/desktop/shared"
 )
 
 // WindowsUI implementa a interface PlatformUI para Windows
 // WindowsUI implements the PlatformUI interface for Windows
 // WindowsUI implementa la interfaz PlatformUI para Windows
 type WindowsUI struct {
-	config            *common.UIConfig
+	config            *shared.UIConfig
 	vpnCore           core.VPNProvider
 	trayMenu          *systray.MenuItem
 	showWindowMenu    *systray.MenuItem
@@ -32,12 +32,24 @@ type WindowsUI struct {
 	connectedIcon     []byte
 	disconnectedIcon  []byte
 	trayInitialized   bool
+	callbacks         *WindowsCallbacks
+}
+
+// WindowsCallbacks contém callbacks para eventos da UI do Windows
+// WindowsCallbacks contains callbacks for Windows UI events
+// WindowsCallbacks contiene callbacks para eventos de la UI de Windows
+type WindowsCallbacks struct {
+	OnShowWindow func()
+	OnConnect    func() error
+	OnDisconnect func() error
+	OnSettings   func()
+	OnExit       func()
 }
 
 // NewWindowsUI cria uma nova instância da UI do Windows
 // NewWindowsUI creates a new instance of the Windows UI
 // NewWindowsUI crea una nueva instancia de la UI de Windows
-func NewWindowsUI(config *common.UIConfig) (*WindowsUI, error) {
+func NewWindowsUI(config *shared.UIConfig) (*WindowsUI, error) {
 	// Carregar ícones para a bandeja
 	connectedIcon, err := os.ReadFile(config.Assets.ConnectedIconPath)
 	if err != nil {
@@ -60,7 +72,7 @@ func NewWindowsUI(config *common.UIConfig) (*WindowsUI, error) {
 // Initialize inicializa os componentes específicos do Windows
 // Initialize initializes the Windows-specific components
 // Initialize inicializa los componentes específicos de Windows
-func (w *WindowsUI) Initialize(vpnCore core.VPNProvider, config *common.UIConfig) error {
+func (w *WindowsUI) Initialize(vpnCore core.VPNProvider, config *shared.UIConfig) error {
 	w.vpnCore = vpnCore
 	
 	// Inicializar a bandeja do sistema em uma goroutine separada
@@ -123,30 +135,48 @@ func (w *WindowsUI) handleMenuClicks() {
 	for {
 		select {
 		case <-w.showWindowMenu.ClickedCh:
-			// Enviar evento para mostrar a janela principal
-			// Este é um placeholder, deve ser integrado com a UI principal
-			log.Println("Evento: Mostrar janela principal")
+			// Mostrar/ocultar janela principal
+			log.Println("Evento: Mostrar/ocultar janela principal")
+			if w.callbacks != nil && w.callbacks.OnShowWindow != nil {
+				w.callbacks.OnShowWindow()
+			}
 			
 		case <-w.connectMenu.ClickedCh:
-			// Iniciar VPN
-			err := w.vpnCore.Start()
-			if err != nil {
-				log.Printf("Erro ao iniciar VPN: %v", err)
-				w.ShowNotification("Erro", fmt.Sprintf("Falha ao conectar: %v", err), common.PriorityHigh)
-			} else {
-				w.UpdateTrayIcon(true)
+			// Conectar VPN
+			log.Println("Evento: Conectar VPN")
+			if !w.vpnCore.IsRunning() {
+				var err error
+				if w.callbacks != nil && w.callbacks.OnConnect != nil {
+					err = w.callbacks.OnConnect()
+				} else {
+					err = w.vpnCore.Start()
+				}
+				if err != nil {
+					log.Printf("Erro ao iniciar VPN: %v", err)
+					w.ShowNotification("Erro", fmt.Sprintf("Falha ao conectar: %v", err), shared.PriorityHigh)
+					continue
+				}
+				
 				w.connectMenu.Hide()
 				w.disconnectMenu.Show()
 			}
 			
 		case <-w.disconnectMenu.ClickedCh:
-			// Parar VPN
-			err := w.vpnCore.Stop()
-			if err != nil {
-				log.Printf("Erro ao parar VPN: %v", err)
-				w.ShowNotification("Erro", fmt.Sprintf("Falha ao desconectar: %v", err), common.PriorityHigh)
-			} else {
-				w.UpdateTrayIcon(false)
+			// Desconectar VPN
+			log.Println("Evento: Desconectar VPN")
+			if w.vpnCore.IsRunning() {
+				var err error
+				if w.callbacks != nil && w.callbacks.OnDisconnect != nil {
+					err = w.callbacks.OnDisconnect()
+				} else {
+					err = w.vpnCore.Stop()
+				}
+				if err != nil {
+					log.Printf("Erro ao parar VPN: %v", err)
+					w.ShowNotification("Erro", fmt.Sprintf("Falha ao desconectar: %v", err), shared.PriorityHigh)
+					continue
+				}
+				
 				w.disconnectMenu.Hide()
 				w.connectMenu.Show()
 			}
@@ -154,6 +184,9 @@ func (w *WindowsUI) handleMenuClicks() {
 		case <-w.settingsMenu.ClickedCh:
 			// Abrir configurações
 			log.Println("Evento: Abrir configurações")
+			if w.callbacks != nil && w.callbacks.OnSettings != nil {
+				w.callbacks.OnSettings()
+			}
 			
 		case <-w.exitMenu.ClickedCh:
 			// Sair da aplicação
@@ -164,7 +197,12 @@ func (w *WindowsUI) handleMenuClicks() {
 				}
 			}
 			
-			// Sair da aplicação - o método real dependerá da integração com a UI principal
+			// Chamar callback de saída se existir
+			if w.callbacks != nil && w.callbacks.OnExit != nil {
+				w.callbacks.OnExit()
+			}
+			
+			// Sair da aplicação
 			systray.Quit()
 			os.Exit(0)
 		}
@@ -191,16 +229,16 @@ func (w *WindowsUI) Cleanup() error {
 // ShowNotification exibe uma notificação no Windows
 // ShowNotification displays a notification on Windows
 // ShowNotification muestra una notificación en Windows
-func (w *WindowsUI) ShowNotification(title, content string, priority common.NotificationPriority) {
+func (w *WindowsUI) ShowNotification(title, content string, priority shared.NotificationPriority) {
 	// Usar a API do Windows para notificações
 	var flags uint32 = win.NIIF_INFO
 	
 	switch priority {
-	case common.PriorityLow:
+	case shared.PriorityLow:
 		flags = win.NIIF_INFO
-	case common.PriorityNormal:
+	case shared.PriorityNormal:
 		flags = win.NIIF_INFO
-	case common.PriorityHigh:
+	case shared.PriorityHigh:
 		flags = win.NIIF_WARNING
 	}
 	

@@ -4,6 +4,7 @@ import (
 	"github.com/p2p-vpn/p2p-vpn/core"
 	"github.com/p2p-vpn/p2p-vpn/ui/desktop/common"
 	"github.com/p2p-vpn/p2p-vpn/ui/desktop/platform"
+	"github.com/p2p-vpn/p2p-vpn/ui/desktop/shared"
 )
 
 // UIManager gerencia a interface gráfica de desktop
@@ -13,13 +14,13 @@ type UIManager struct {
 	vpnCore    core.VPNProvider
 	appUI      common.DesktopUI
 	platformUI platform.PlatformUI
-	config     *common.UIConfig
+	config     *shared.UIConfig
 }
 
 // NewUIManager cria uma nova instância do gerenciador de UI de desktop
 // NewUIManager creates a new instance of the desktop UI manager
 // NewUIManager crea una nueva instancia del gestor de UI de escritorio
-func NewUIManager(vpnCore core.VPNProvider, config *common.UIConfig) (*UIManager, error) {
+func NewUIManager(vpnCore core.VPNProvider, config *shared.UIConfig) (*UIManager, error) {
 	// Criar instância do manager
 	manager := &UIManager{
 		vpnCore: vpnCore,
