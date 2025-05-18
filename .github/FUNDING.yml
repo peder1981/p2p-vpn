@@ -1,0 +1,14 @@
+# Estas são plataformas de financiamento suportadas
+
+github: peder1981 # Seu nome de usuário do GitHub
+patreon: # Seu nome de usuário do Patreon
+open_collective: # Nome do seu coletivo
+ko_fi: # Seu nome de usuário Ko-fi
+tidelift: # Nome do pacote npm/maven/pip/etc
+community_bridge: # Nome do seu projeto
+liberapay: # Seu nome de usuário Liberapay
+issuehunt: # Seu nome de usuário IssueHunt
+otechie: # Seu nome de usuário Otechie
+lfx_crowdfunding: # Nome do projeto LFX Crowdfunding
+custom: # Até 4 URLs para botões de patrocínio personalizados
+  # - https://www.paypal.me/seupaypal
