@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.p2p-vpn.service</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/p2p-vpn/p2p-vpn</string>
+        <string>--config</string>
+        <string>/etc/p2p-vpn/config.yaml</string>
+        <string>--security-config</string>
+        <string>/etc/p2p-vpn/security.yaml</string>
+        <string>--web-port</string>
+        <string>8080</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardErrorPath</key>
+    <string>/var/log/p2p-vpn.err</string>
+    <key>StandardOutPath</key>
+    <string>/var/log/p2p-vpn.log</string>
+    <key>WorkingDirectory</key>
+    <string>/usr/local/p2p-vpn</string>
+</dict>
+</plist>

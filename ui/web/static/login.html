@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - VPN P2P Universal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <h1>VPN P2P Universal</h1>
+                <p id="login-subtitle">Acesso Seguro</p>
+            </div>
+            
+            <div class="login-form">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="username">Usuário:</label>
+                        <input type="text" id="username" name="username" required autocomplete="username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Senha:</label>
+                        <input type="password" id="password" name="password" required autocomplete="current-password">
+                    </div>
+                    
+                    <div class="form-group remember-me">
+                        <input type="checkbox" id="remember" name="remember">
+                        <label for="remember" id="remember-label">Lembrar-me</label>
+                    </div>
+                    
+                    <div class="error-message" id="login-error"></div>
+                    
+                    <div class="form-group">
+                        <button type="submit" id="login-button">Entrar</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="login-footer">
+                <div class="language-selector">
+                    <label for="language-select" id="language-label">Idioma:</label>
+                    <select id="language-select">
+                        <option value="pt-br">Português (Brasil)</option>
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                    </select>
+                </div>
+                
+                <p class="version-info">VPN P2P Universal v1.0</p>
+                <p class="copyright">© 2025 VPN P2P Universal - Software Livre e Código Aberto</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/auth.js"></script>
+    <script>
+        // Traduções para a página de login
+        const loginTranslations = {
+            'pt-br': {
+                subtitle: 'Acesso Seguro',
+                usernameLabel: 'Usuário:',
+                passwordLabel: 'Senha:',
+                rememberLabel: 'Lembrar-me',
+                loginButton: 'Entrar',
+                languageLabel: 'Idioma:',
+                errorInvalidCredentials: 'Usuário ou senha inválidos',
+                errorGeneric: 'Erro ao fazer login. Tente novamente.'
+            },
+            'en': {
+                subtitle: 'Secure Access',
+                usernameLabel: 'Username:',
+                passwordLabel: 'Password:',
+                rememberLabel: 'Remember me',
+                loginButton: 'Login',
+                languageLabel: 'Language:',
+                errorInvalidCredentials: 'Invalid username or password',
+                errorGeneric: 'Login error. Please try again.'
+            },
+            'es': {
+                subtitle: 'Acceso Seguro',
+                usernameLabel: 'Usuario:',
+                passwordLabel: 'Contraseña:',
+                rememberLabel: 'Recordarme',
+                loginButton: 'Entrar',
+                languageLabel: 'Idioma:',
+                errorInvalidCredentials: 'Usuario o contraseña inválidos',
+                errorGeneric: 'Error al iniciar sesión. Intente nuevamente.'
+            }
+        };
+
+        // Aplicar tradução baseada no idioma selecionado
+        function applyTranslation(lang) {
+            const texts = loginTranslations[lang] || loginTranslations['pt-br'];
+            
+            // Atualizar textos
+            document.getElementById('login-subtitle').textContent = texts.subtitle;
+            document.querySelector('label[for="username"]').textContent = texts.usernameLabel;
+            document.querySelector('label[for="password"]').textContent = texts.passwordLabel;
+            document.getElementById('remember-label').textContent = texts.rememberLabel;
+            document.getElementById('login-button').textContent = texts.loginButton;
+            document.getElementById('language-label').textContent = texts.languageLabel;
+            
+            // Salvar preferência de idioma
+            localStorage.setItem('language', lang);
+        }
+
+        // Manipular envio do formulário
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorElement = document.getElementById('login-error');
+            const lang = document.getElementById('language-select').value;
+            const texts = loginTranslations[lang] || loginTranslations['pt-br'];
+            
+            errorElement.textContent = '';
+            document.getElementById('login-button').disabled = true;
+            
+            try {
+                await Auth.login(username, password);
+                
+                // Se o login for bem-sucedido, redirecionar para a página principal
+                window.location.href = '/index.html';
+            } catch (error) {
+                // Mostrar mensagem de erro
+                errorElement.textContent = 
+                    error.message.includes('Falha na autenticação') ? 
+                    texts.errorInvalidCredentials : 
+                    texts.errorGeneric;
+            } finally {
+                document.getElementById('login-button').disabled = false;
+            }
+        });
+
+        // Configurar seletor de idioma
+        document.getElementById('language-select').addEventListener('change', (e) => {
+            applyTranslation(e.target.value);
+        });
+
+        // Aplicar o idioma preferido ao carregar a página
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar se já está logado
+            if (Auth.isLoggedIn) {
+                window.location.href = '/index.html';
+                return;
+            }
+            
+            // Carregar idioma preferido
+            const savedLanguage = localStorage.getItem('language') || 'pt-br';
+            document.getElementById('language-select').value = savedLanguage;
+            applyTranslation(savedLanguage);
+        });
+    </script>
+</body>
+</html>

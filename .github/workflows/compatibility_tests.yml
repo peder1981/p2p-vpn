@@ -1,0 +1,157 @@
+name: Testes de Compatibilidade
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: 'Plataformas para testar (linux,windows,macos)'
+        required: true
+        default: 'linux'
+      versions:
+        description: 'Versões específicas (separadas por vírgula)'
+        required: false
+
+jobs:
+  test-linux:
+    name: Testar em Linux
+    if: ${{ !github.event.inputs.platforms || contains(github.event.inputs.platforms, 'linux') }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        distribution: ['ubuntu-20.04', 'ubuntu-22.04', 'debian-11']
+        include:
+          - distribution: 'ubuntu-20.04'
+            container: 'ubuntu:20.04'
+          - distribution: 'ubuntu-22.04'
+            container: 'ubuntu:22.04'
+          - distribution: 'debian-11'
+            container: 'debian:11'
+    
+    container:
+      image: ${{ matrix.container }}
+      options: --privileged
+    
+    steps:
+      - name: Instalar dependências
+        run: |
+          apt-get update
+          apt-get install -y golang git make curl iproute2 build-essential
+
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Configurar Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.18'
+
+      - name: Verificar versão do sistema
+        run: |
+          cat /etc/os-release
+          uname -a
+
+      - name: Compilar projeto
+        run: |
+          go mod tidy
+          go build -o p2p-vpn main.go
+
+      - name: Executar testes unitários
+        run: go test ./tests/unit/... -v
+
+      - name: Executar testes específicos de Linux
+        run: go test ./tests/platform/platform_linux_test.go -v
+
+  test-windows:
+    name: Testar em Windows
+    if: ${{ !github.event.inputs.platforms || contains(github.event.inputs.platforms, 'windows') }}
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Configurar Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.18'
+
+      - name: Verificar versão do sistema
+        run: |
+          systeminfo | findstr /B /C:"OS Name" /C:"OS Version"
+
+      - name: Compilar projeto
+        run: |
+          go mod tidy
+          go build -o p2p-vpn.exe main.go
+
+      - name: Executar testes unitários
+        run: go test ./tests/unit/... -v
+
+      - name: Executar testes específicos de Windows
+        run: go test ./tests/platform/platform_windows_test.go -v
+        # Nota: testes que requerem permissões de administrador podem falhar no CI
+
+  test-macos:
+    name: Testar em macOS
+    if: ${{ !github.event.inputs.platforms || contains(github.event.inputs.platforms, 'macos') }}
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Configurar Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.18'
+
+      - name: Verificar versão do sistema
+        run: |
+          sw_vers
+          uname -a
+
+      - name: Compilar projeto
+        run: |
+          go mod tidy
+          go build -o p2p-vpn main.go
+
+      - name: Executar testes unitários
+        run: go test ./tests/unit/... -v
+
+      - name: Executar testes específicos de macOS
+        run: go test ./tests/platform/platform_darwin_test.go -v
+        # Nota: testes que requerem permissões de root podem falhar no CI
+
+  generate-report:
+    name: Gerar Relatório de Compatibilidade
+    needs: [test-linux, test-windows, test-macos]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Gerar relatório
+        run: |
+          echo "# Relatório de Compatibilidade P2P-VPN" > compatibility_report.md
+          echo "===============================" >> compatibility_report.md
+          echo "" >> compatibility_report.md
+          echo "Executado em: $(date)" >> compatibility_report.md
+          echo "" >> compatibility_report.md
+          echo "| Plataforma | Versão | Status | Observações |" >> compatibility_report.md
+          echo "|------------|--------|--------|-------------|" >> compatibility_report.md
+          echo "| Linux | Ubuntu 20.04 | ✅ | Testes unitários e específicos da plataforma |" >> compatibility_report.md
+          echo "| Linux | Ubuntu 22.04 | ✅ | Testes unitários e específicos da plataforma |" >> compatibility_report.md
+          echo "| Linux | Debian 11 | ✅ | Testes unitários e específicos da plataforma |" >> compatibility_report.md
+          echo "| Windows | Latest | ✅ | Testes unitários e específicos da plataforma |" >> compatibility_report.md
+          echo "| macOS | Latest | ✅ | Testes unitários e específicos da plataforma |" >> compatibility_report.md
+          
+      - name: Upload relatório como artefato
+        uses: actions/upload-artifact@v3
+        with:
+          name: compatibility-report
+          path: compatibility_report.md
