@@ -65,7 +65,7 @@ P2P Universal VPN is a free and open-source peer-to-peer (P2P) Virtual Private N
 ### Linux
 #### Using the automated installer
 ```bash
-curl -sSL https://install.p2p-vpn.com | sudo bash
+curl -sSL https://raw.githubusercontent.com/peder1981/p2p-vpn/main/scripts/install.sh | sudo bash
 ```
 
 #### Using distribution-specific packages

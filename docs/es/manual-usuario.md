@@ -65,7 +65,7 @@ VPN P2P Universal es una solución de Red Privada Virtual peer-to-peer (P2P) gra
 ### Linux
 #### Usando el instalador automatizado
 ```bash
-curl -sSL https://install.p2p-vpn.com | sudo bash
+curl -sSL https://raw.githubusercontent.com/peder1981/p2p-vpn/main/scripts/install.sh | sudo bash
 ```
 
 #### Usando paquetes específicos de la distribución
